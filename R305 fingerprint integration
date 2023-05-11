@@ -1,0 +1,90 @@
+///////////The R305 fingerprint module is similar to the R307 module, so the same process can be followed to
+///////////integrate it into the code. However, since the R305 module uses a different communication protocol
+///////////(UART instead of TTL), you will need to modify the code accordingly.
+
+///////////Here are the steps to integrate the R305 fingerprint module:
+
+///////////Connect the R305 fingerprint module to your Raspberry Pi. Make sure to connect the RX pin of
+///////////the module to the TX pin of the Raspberry Pi, and the TX pin of the module to the RX pin of the Raspberry Pi.
+
+////////Install the PySerial library by running the following command in your terminal://////////
+
+pip install pyserial
+
+
+////////Add the following lines of code at the beginning of your Python script to import the PySerial library and define the serial port:
+
+import serial
+
+# define the serial port
+ser = serial.Serial('/dev/ttyS0', 57600, timeout=1)
+
+
+///////////////////Modify the read_fingerprint() function to send commands to the R305 module using the ser.write()
+///////////////////function instead of the GPIO.output() function. Here is an example of how you can modify the function:
+
+def read_fingerprint():
+    while True:
+        # send command to capture fingerprint
+        ser.write(b'\xF5\x03\x01\x00\x05\x09')
+        
+        # read response from fingerprint module
+        response = ser.read(12)
+        
+        # check if response is valid
+        if response[0] == 0xF5 and response[1] == 0x03 and response[9] == 0x00:
+            return response[3]*256 + response[4]
+
+
+
+///////////In this example, we are sending the command to capture a fingerprint (b'\xF5\x03\x01\x00\x05\x09')
+///////////and then reading the response from the module using the ser.read()
+///////////function. We are then checking if the response is valid by checking
+///////////the values of the response bytes, and returning the fingerprint ID if the response is valid.
+
+
+
+/////////// Modify the main loop to call the read_fingerprint() function and check if the fingerprint ID is valid.
+///////////Here is an example of how you can modify the loop:
+
+# loop for voting
+while True:
+    # read fingerprint
+    fingerprint_id = read_fingerprint()
+
+    # check if fingerprint ID is valid
+    if fingerprint_id in valid_ids:
+        # get corresponding candidate ID
+        candidate_id = valid_ids.index(fingerprint_id) + 1
+
+        # increment vote count for candidate
+        vote_counts[candidate_id] += 1
+
+        # display message on LCD
+        lcd_string("Vote %d Recorded" % candidate_id, 1)
+
+        # light up LED for candidate
+        GPIO.output(led_pins[candidate_id], True)
+        time.sleep(0.5)
+        GPIO.output(led_pins[candidate_id], False)
+
+        # wait for button release
+        while True:
+            if GPIO.input(button_pins[candidate_id]) == True:
+                break
+
+        # clear LCD message
+        lcd_string("                ", 1)
+
+    else:
+        # display error message on LCD
+        lcd_string("Invalid Fingerprint", 1)
+        time.sleep(1)
+        lcd_string("                ", 1)
+
+
+
+///////////In this example, we are reading the fingerprint ID using the read_fingerprint() 
+///////////function and checking if it is in the list of valid IDs.
+///////////If the ID is valid, we get the corresponding candidate ID and
+///////////increment the vote count for that candidate. We then display a message on the LCD and light up the LED for
