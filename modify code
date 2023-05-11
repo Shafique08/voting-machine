@@ -1,0 +1,86 @@
+///////////To merge the fingerprint sensor code into your code, you can follow these steps:
+
+///////////First, you need to import the required libraries for the fingerprint sensor. You can add the following lines at the top of your code:
+
+
+
+import serial
+import time
+
+///////////Then, you need to set up the serial port for the fingerprint sensor. You can add the following lines after setting up the GPIO pins:
+
+# set up serial port for fingerprint sensor
+fingerprint = serial.Serial("/dev/ttyS0", baudrate=57600, timeout=1)
+
+
+
+///////////This assumes that the fingerprint sensor is connected to the Raspberry Pi's GPIO serial port.
+
+///////////Now, you can add the fingerprint sensor code within the while loop of your existing code. Here's an example 
+///////////of how you can modify the while loop to include fingerprint sensor functionality:
+
+while True:
+    # check button states
+    new_button_1_state = GPIO.input(button_1)
+    new_button_2_state = GPIO.input(button_2)
+    new_button_3_state = GPIO.input(button_3)
+    new_button_4_state = GPIO.input(button_4)
+    new_button_5_state = GPIO.input(button_5)
+
+    # read fingerprint sensor
+    fingerprint.write(b"\xEF\x01\xFF\xFF\xFF\xFF\x01\x00\x03\x01\x00\x05")
+    response = fingerprint.read(12)
+    if response[0] == 0xEF and response[1] == 0x01 and response[9] == 0x00:
+        finger_id = (response[2] << 24) + (response[3] << 16) + (response[4] << 8) + response[5]
+        finger_score = response[6] << 8 + response[7]
+
+        # check if fingerprint matches
+        if finger_id in fingerprint_ids:
+            lcd_string("Fingerprint\nmatched", 1)
+            # increment vote count for corresponding button
+            if finger_id == fingerprint_ids[0]:
+                vote_1_count += 1
+                GPIO.output(led_1, True)
+            elif finger_id == fingerprint_ids[1]:
+                vote_2_count += 1
+                GPIO.output(led_2, True)
+            elif finger_id == fingerprint_ids[2]:
+                vote_3_count += 1
+                GPIO.output(led_3, True)
+            elif finger_id == fingerprint_ids[3]:
+                vote_4_count += 1
+                GPIO.output(led_4, True)
+            elif finger_id == fingerprint_ids[4]:
+                vote_5_count += 1
+                GPIO.output(led_5, True)
+            time.sleep(0.5)
+            # turn off LED and clear LCD
+            GPIO.output([led_1, led_2, led_3, led_4, led_5], False)
+            lcd.clear()
+        else:
+            lcd_string("Fingerprint\nnot found", 1)
+            time.sleep(1)
+            lcd.clear()
+
+    # if button 1 is pressed
+    if new_button_1_state == False and button_1_state == True:
+        lcd_string("Vote 1 Recorded", 1)
+        vote_1_count += 1
+        button_1_state = False
+        GPIO.output(led_1, True)
+        time.sleep(0.5)
+        GPIO.output(led_1, False)
+
+    # if all buttons are pressed at the same time, exit the loop
+    if new_button_1_state == False and new_button_2_state == False and new_button_3_state == False and new_button_4_state == False and new_button_5_state == False:
+        break
+
+    # continue with the rest of the button checking and voting logic as before
+    # ...
+
+Note that you'll need to define the fingerprint object before using it, using the appropriate serial port and baud rate. Also, make sure to define the fingerprint_ids
+list with the correct fingerprint IDs to match with the buttons.
+
+
+
+
