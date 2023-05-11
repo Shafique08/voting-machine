@@ -1,0 +1,117 @@
+import RPi.GPIO as GPIO
+import time
+import Adafruit_CharLCD as LCD
+
+# set up push button pins
+button_1 = 17
+button_2 = 18
+button_3 = 27
+button_4 = 22
+button_5 = 23
+
+# set up LED pins
+led_1 = 24
+led_2 = 25
+led_3 = 5
+led_4 = 6
+led_5 = 12
+
+# set up LCD pins
+lcd_rs = 7
+lcd_en = 8
+lcd_d4 = 25
+lcd_d5 = 24
+lcd_d6 = 23
+lcd_d7 = 18
+lcd_backlight = 10
+lcd_columns = 16
+lcd_rows = 2
+
+# create LCD object
+lcd = LCD.Adafruit_CharLCD(lcd_rs, lcd_en, lcd_d4, lcd_d5, lcd_d6, lcd_d7, lcd_columns, lcd_rows, lcd_backlight)
+
+# set up GPIO pins
+GPIO.setmode(GPIO.BCM)
+GPIO.setup(button_1, GPIO.IN, pull_up_down=GPIO.PUD_UP)
+GPIO.setup(button_2, GPIO.IN, pull_up_down=GPIO.PUD_UP)
+GPIO.setup(button_3, GPIO.IN, pull_up_down=GPIO.PUD_UP)
+GPIO.setup(button_4, GPIO.IN, pull_up_down=GPIO.PUD_UP)
+GPIO.setup(button_5, GPIO.IN, pull_up_down=GPIO.PUD_UP)
+GPIO.setup(led_1, GPIO.OUT)
+GPIO.setup(led_2, GPIO.OUT)
+GPIO.setup(led_3, GPIO.OUT)
+GPIO.setup(led_4, GPIO.OUT)
+GPIO.setup(led_5, GPIO.OUT)
+
+# initialize button states
+button_1_state = GPIO.input(button_1)
+button_2_state = GPIO.input(button_2)
+button_3_state = GPIO.input(button_3)
+button_4_state = GPIO.input(button_4)
+button_5_state = GPIO.input(button_5)
+
+# initialize vote counts
+vote_1_count = 0
+vote_2_count = 0
+vote_3_count = 0
+vote_4_count = 0
+vote_5_count = 0
+
+# define LCD message
+def lcd_string(message, line):
+    lcd.set_cursor(0,line)
+    lcd.message(message)
+
+# loop for voting
+while True:
+    # check button states
+    new_button_1_state = GPIO.input(button_1)
+    new_button_2_state = GPIO.input(button_2)
+    new_button_3_state = GPIO.input(button_3)
+    new_button_4_state = GPIO.input(button_4)
+    new_button_5_state = GPIO.input(button_5)
+
+    # if button 1 is pressed
+    if new_button_1_state == False and button_1_state == True:
+        lcd_string("Vote 1 Recorded", 1)
+        vote_1_count += 1
+        button_1_state = False
+        GPIO.output(led_1, True)
+        time.sleep(0.5)
+        GPIO.output(led_1, False)
+
+    # if button 2 is pressed
+    if new_button_2_state == False and button_2_state == True:
+        lcd_string("Vote 2 Recorded", 1)
+        vote_2_count += 1
+        button_2_state = False
+        GPIO.output(led_2, True)
+        time.sleep(0.5)
+        GPIO.output(led_2, False)
+
+    # if button 3 is pressed
+    if new_button_3_state == False and button_3_state == True:
+        lcd_string("Vote 3 Recorded", 1)
+        vote_3_count += 1
+        button_3_state = False
+        GPIO.output(led_3, True)
+        time.sleep(0.5)
+        GPIO.output(led_3, False)
+
+    # if button 4 is pressed
+    if new_button_4_state == False and button_4_state == True:
+        lcd_string("Vote 4 Recorded", 1)
+        vote_4_count += 1
+        button_4_state = False
+        GPIO.output(led_4, True)
+        time.sleep(0.5)
+        GPIO.output(led_4, False)
+
+    # if button 5 is pressed
+    if new_button_5_state == False and button_5_state == True:
+        lcd_string("Vote 5 Recorded", 1)
+        vote_5_count += 1
+        button_5_state = False
+        GPIO.output(led_5, True)
+        time.sleep(0.5)
+        GPIO.output(led_5, False)
